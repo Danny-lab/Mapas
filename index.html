@@ -20,23 +20,30 @@
 
   <script>
     // Acceder a la cámara trasera
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { exact: "environment" } } // Intentar usar la cámara trasera
-    })
-    .then(stream => {
-      const video = document.getElementById('video');
-      video.srcObject = stream;
-      video.play();
-      video.addEventListener('play', () => {
-        console.log('Video is playing');
-        setInterval(() => {
-          recognizeText(video);
-        }, 5000); // Reconocer texto cada 5 segundos
+    navigator.mediaDevices.enumerateDevices()
+      .then(devices => {
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        const rearCamera = videoDevices.find(device => device.label.toLowerCase().includes('back')) || videoDevices[0];
+
+        return navigator.mediaDevices.getUserMedia({
+          video: {
+            deviceId: rearCamera.deviceId
+          }
+        });
+      })
+      .then(stream => {
+        const video = document.getElementById('video');
+        video.srcObject = stream;
+        video.addEventListener('play', () => {
+          console.log('Video is playing');
+          setInterval(() => {
+            recognizeText(video);
+          }, 1000); // Reconocer texto cada segundo
+        });
+      })
+      .catch(error => {
+        console.error('Error accessing the camera: ', error);
       });
-    })
-    .catch(error => {
-      console.error('Error accessing the camera: ', error);
-    });
 
     // Lista de barrios y sus imágenes asociadas
     const barrios = [
@@ -55,10 +62,10 @@
       
       Tesseract.recognize(canvas, 'eng')
         .then(({ data: { text } }) => {
-          console.log('Texto reconocido:', text);
+          console.log('Texto reconocido:', text);  // Asegúrate de que se está imprimiendo
           let barrioReconocido = false;
           barrios.forEach(barrio => {
-            if (text.includes(barrio.name)) {
+            if (text.toUpperCase().includes(barrio.name.toUpperCase())) { // Ignorar mayúsculas
               console.log(`Barrio reconocido: ${barrio.name}`);
               showARImage(barrio.image);
               barrioReconocido = true;
@@ -83,8 +90,8 @@
       }
       
       const marker = document.createElement('a-marker');
-      marker.setAttribute('preset', 'hiro');
-      
+      marker.setAttribute('preset', 'hiro'); // Asegúrate de que el marcador sea visible
+
       const image = document.createElement('a-image');
       image.setAttribute('src', imageSrc);
       image.setAttribute('position', '0 0.5 0');
