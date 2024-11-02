@@ -17,11 +17,11 @@
   <a-scene embedded arjs>
     <a-entity camera></a-entity>
   </a-scene>
-  <script src="app.js"></script>
 </body>
 </html>
+
 <script>
-   // Acceder a la cámara trasera
+// Acceder a la cámara trasera
 navigator.mediaDevices.enumerateDevices()
   .then(devices => {
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
@@ -37,6 +37,7 @@ navigator.mediaDevices.enumerateDevices()
     const video = document.getElementById('video');
     video.srcObject = stream;
     video.addEventListener('play', () => {
+      console.log('Video is playing');
       setInterval(() => {
         recognizeText(video);
       }, 5000); // Reconocer texto cada 5 segundos
@@ -55,6 +56,7 @@ const barrios = [
 
 // Reconocer texto en la imagen de la cámara
 function recognizeText(video) {
+  console.log('Starting text recognition');
   const canvas = document.createElement('canvas');
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -64,12 +66,17 @@ function recognizeText(video) {
   Tesseract.recognize(canvas, 'eng')
     .then(({ data: { text } }) => {
       console.log('Texto reconocido:', text);
+      let barrioReconocido = false;
       barrios.forEach(barrio => {
         if (text.includes(barrio.name)) {
           console.log(`Barrio reconocido: ${barrio.name}`);
           showARImage(barrio.image);
+          barrioReconocido = true;
         }
       });
+      if (!barrioReconocido) {
+        console.log('No se reconoció ningún barrio');
+      }
     })
     .catch(error => {
       console.error('Error recognizing text:', error);
@@ -78,6 +85,7 @@ function recognizeText(video) {
 
 // Mostrar imagen en realidad aumentada
 function showARImage(imageSrc) {
+  console.log(`Mostrando imagen en AR: ${imageSrc}`);
   const scene = document.querySelector('a-scene');
   const existingMarker = scene.querySelector('a-marker');
   if (existingMarker) {
@@ -95,5 +103,6 @@ function showARImage(imageSrc) {
   marker.appendChild(image);
   scene.appendChild(marker);
 }
+
 
 </script>
