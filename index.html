@@ -17,91 +17,82 @@
   <a-scene embedded arjs>
     <a-entity camera></a-entity>
   </a-scene>
-</body>
-</html>
 
-<script>
-// Acceder a la cámara trasera
-navigator.mediaDevices.enumerateDevices()
-  .then(devices => {
-    const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    const rearCamera = videoDevices.find(device => device.label.toLowerCase().includes('back')) || videoDevices[0];
-
-    return navigator.mediaDevices.getUserMedia({
-      video: {
-        deviceId: rearCamera.deviceId
-      }
-    });
-  })
-  .then(stream => {
-    const video = document.getElementById('video');
-    video.srcObject = stream;
-    video.addEventListener('play', () => {
-      console.log('Video is playing');
-      setInterval(() => {
-        recognizeText(video);
-      }, 5000); // Reconocer texto cada 5 segundos
-    });
-  })
-  .catch(error => {
-    console.error('Error accessing the camera: ', error);
-  });
-
-// Lista de barrios y sus imágenes asociadas
-const barrios = [
-  { name: 'ANDALUCIA', image: 'andalucia.jpg' },
-  // Añade más barrios según sea necesario
-];
-
-// Reconocer texto en la imagen de la cámara
-function recognizeText(video) {
-  console.log('Starting text recognition');
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const context = canvas.getContext('2d');
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  
-  Tesseract.recognize(canvas, 'eng')
-    .then(({ data: { text } }) => {
-      console.log('Texto reconocido:', text);
-      let barrioReconocido = false;
-      barrios.forEach(barrio => {
-        if (text.includes(barrio.name)) {
-          console.log(`Barrio reconocido: ${barrio.name}`);
-          showARImage(barrio.image);
-          barrioReconocido = true;
-        }
+  <script>
+    // Acceder a la cámara trasera
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { exact: "environment" } } // Intentar usar la cámara trasera
+    })
+    .then(stream => {
+      const video = document.getElementById('video');
+      video.srcObject = stream;
+      video.play();
+      video.addEventListener('play', () => {
+        console.log('Video is playing');
+        setInterval(() => {
+          recognizeText(video);
+        }, 5000); // Reconocer texto cada 5 segundos
       });
-      if (!barrioReconocido) {
-        console.log('No se reconoció ningún barrio');
-      }
     })
     .catch(error => {
-      console.error('Error recognizing text:', error);
+      console.error('Error accessing the camera: ', error);
     });
-}
 
-// Mostrar imagen en realidad aumentada
-function showARImage(imageSrc) {
-  console.log(`Mostrando imagen en AR: ${imageSrc}`);
-  const scene = document.querySelector('a-scene');
-  const existingMarker = scene.querySelector('a-marker');
-  if (existingMarker) {
-    scene.removeChild(existingMarker);
-  }
-  
-  const marker = document.createElement('a-marker');
-  marker.setAttribute('preset', 'hiro');
-  
-  const image = document.createElement('a-image');
-  image.setAttribute('src', imageSrc);
-  image.setAttribute('position', '0 0.5 0');
-  image.setAttribute('rotation', '-90 0 0');
-  
-  marker.appendChild(image);
-  scene.appendChild(marker);
-}
+    // Lista de barrios y sus imágenes asociadas
+    const barrios = [
+      { name: 'ANDALUCIA', image: 'andalucia.jpg' },
+      // Añade más barrios según sea necesario
+    ];
 
+    // Reconocer texto en la imagen de la cámara
+    function recognizeText(video) {
+      console.log('Starting text recognition');
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      Tesseract.recognize(canvas, 'eng')
+        .then(({ data: { text } }) => {
+          console.log('Texto reconocido:', text);
+          let barrioReconocido = false;
+          barrios.forEach(barrio => {
+            if (text.includes(barrio.name)) {
+              console.log(`Barrio reconocido: ${barrio.name}`);
+              showARImage(barrio.image);
+              barrioReconocido = true;
+            }
+          });
+          if (!barrioReconocido) {
+            console.log('No se reconoció ningún barrio');
+          }
+        })
+        .catch(error => {
+          console.error('Error recognizing text:', error);
+        });
+    }
 
-</script>
+    // Mostrar imagen en realidad aumentada
+    function showARImage(imageSrc) {
+      console.log(`Mostrando imagen en AR: ${imageSrc}`);
+      const scene = document.querySelector('a-scene');
+      const existingMarker = scene.querySelector('a-marker');
+      if (existingMarker) {
+        scene.removeChild(existingMarker);
+      }
+      
+      const marker = document.createElement('a-marker');
+      marker.setAttribute('preset', 'hiro');
+      
+      const image = document.createElement('a-image');
+      image.setAttribute('src', imageSrc);
+      image.setAttribute('position', '0 0.5 0');
+      image.setAttribute('rotation', '-90 0 0');
+      
+      marker.appendChild(image);
+      scene.appendChild(marker);
+    }
+  </script>
+</body>
+</html>
