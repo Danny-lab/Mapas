@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR Map</title>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/1.6.1/aframe/build/aframe-ar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.1/dist/tesseract.min.js"></script>
+  <style>
+    body { margin: 0; }
+    video { width: 100%; height: 100vh; object-fit: cover; }
+  </style>
+</head>
+<body>
+  <video id="video" autoplay></video>
+  <a-scene embedded arjs>
+    <a-entity camera></a-entity>
+  </a-scene>
+  <script src="app.js"></script>
+</body>
+</html>
+<script>
+    // Acceder a la cámara
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => {
+    const video = document.getElementById('video');
+    video.srcObject = stream;
+    video.addEventListener('play', () => {
+      setInterval(() => {
+        recognizeText(video);
+      }, 3000); // Reconocer texto cada 3 segundos
+    });
+  })
+  .catch(error => {
+    console.error('Error accessing the camera: ', error);
+  });
+
+// Lista de barrios y sus imágenes asociadas
+const barrios = [
+  { name: 'LA FRANCIA', image: 'Isla.jpeg' },
+  { name: 'Barrio2', image: 'image2.jpg' },
+  // Añade más barrios según sea necesario
+];
+
+// Reconocer texto en la imagen de la cámara
+function recognizeText(video) {
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const context = canvas.getContext('2d');
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+  Tesseract.recognize(canvas, 'eng')
+    .then(({ data: { text } }) => {
+      console.log(text);
+      barrios.forEach(barrio => {
+        if (text.includes(barrio.name)) {
+          showARImage(barrio.image);
+        }
+      });
+    });
+}
+
+// Mostrar imagen en realidad aumentada
+function showARImage(imageSrc) {
+  const scene = document.querySelector('a-scene');
+  const existingMarker = scene.querySelector('a-marker');
+  if (existingMarker) {
+    scene.removeChild(existingMarker);
+  }
+  
+  const marker = document.createElement('a-marker');
+  marker.setAttribute('preset', 'hiro');
+  
+  const image = document.createElement('a-image');
+  image.setAttribute('src', imageSrc);
+  image.setAttribute('position', '0 0.5 0');
+  image.setAttribute('rotation', '-90 0 0');
+  
+  marker.appendChild(image);
+  scene.appendChild(marker);
+}
+
+</script>
