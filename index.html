@@ -20,8 +20,8 @@
   </style>
 </head>
 <body>
-  <video id="video" autoplay></video>
-  <a-scene embedded arjs>
+  <video id="video" autoplay playsinline></video>
+  <a-scene embedded arjs='trackingBackend: artoolkit; markersAreaEnabled: false;'>
     <a-entity camera></a-entity>
   </a-scene>
 
@@ -41,8 +41,10 @@
       .then(stream => {
         const video = document.getElementById('video');
         video.srcObject = stream;
+        video.addEventListener('loadedmetadata', () => {
+          video.play();
+        });
         video.addEventListener('play', () => {
-          console.log('Video is playing');
           setInterval(() => {
             recognizeText(video);
           }, 1000); // Reconocer texto cada segundo
@@ -60,7 +62,6 @@
 
     // Reconocer texto en la imagen de la cámara
     function recognizeText(video) {
-      console.log('Starting text recognition');
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -69,10 +70,10 @@
       
       Tesseract.recognize(canvas, 'eng')
         .then(({ data: { text } }) => {
-          console.log('Texto reconocido:', text);  // Asegúrate de que se está imprimiendo
+          console.log('Texto reconocido:', text);
           let barrioReconocido = false;
           barrios.forEach(barrio => {
-            if (text.toUpperCase().includes(barrio.name.toUpperCase())) { // Ignorar mayúsculas
+            if (text.toUpperCase().includes(barrio.name.toUpperCase())) {
               console.log(`Barrio reconocido: ${barrio.name}`);
               showARImage(barrio.image);
               barrioReconocido = true;
@@ -89,7 +90,6 @@
 
     // Mostrar imagen en realidad aumentada
     function showARImage(imageSrc) {
-      console.log(`Mostrando imagen en AR: ${imageSrc}`);
       const scene = document.querySelector('a-scene');
       const existingMarker = scene.querySelector('a-marker');
       if (existingMarker) {
