@@ -21,8 +21,18 @@
 </body>
 </html>
 <script>
-    // Acceder a la cámara
-navigator.mediaDevices.getUserMedia({ video: true })
+    // Acceder a la cámara trasera
+navigator.mediaDevices.enumerateDevices()
+  .then(devices => {
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    const rearCamera = videoDevices.find(device => device.label.toLowerCase().includes('back')) || videoDevices[0];
+
+    return navigator.mediaDevices.getUserMedia({
+      video: {
+        deviceId: rearCamera.deviceId
+      }
+    });
+  })
   .then(stream => {
     const video = document.getElementById('video');
     video.srcObject = stream;
@@ -38,7 +48,7 @@ navigator.mediaDevices.getUserMedia({ video: true })
 
 // Lista de barrios y sus imágenes asociadas
 const barrios = [
-  { name: 'LA FRANCIA', image: 'Isla.jpeg' },
+  { name: 'ANDALUCIA', image: 'Isla.jpeg' },
   { name: 'Barrio2', image: 'image2.jpg' },
   // Añade más barrios según sea necesario
 ];
