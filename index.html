@@ -21,7 +21,7 @@
 </body>
 </html>
 <script>
-    // Acceder a la cámara trasera
+   // Acceder a la cámara trasera
 navigator.mediaDevices.enumerateDevices()
   .then(devices => {
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
@@ -39,7 +39,7 @@ navigator.mediaDevices.enumerateDevices()
     video.addEventListener('play', () => {
       setInterval(() => {
         recognizeText(video);
-      }, 3000); // Reconocer texto cada 3 segundos
+      }, 5000); // Reconocer texto cada 5 segundos
     });
   })
   .catch(error => {
@@ -63,12 +63,16 @@ function recognizeText(video) {
   
   Tesseract.recognize(canvas, 'eng')
     .then(({ data: { text } }) => {
-      console.log(text);
+      console.log('Texto reconocido:', text);
       barrios.forEach(barrio => {
         if (text.includes(barrio.name)) {
+          console.log(`Barrio reconocido: ${barrio.name}`);
           showARImage(barrio.image);
         }
       });
+    })
+    .catch(error => {
+      console.error('Error recognizing text:', error);
     });
 }
 
